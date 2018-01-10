@@ -28,7 +28,8 @@
 #'   select a (time) range on the x-axis by two sebsequent clicks with the left
 #'   mouse button. The selected data points are highlighted and the fitted
 #'   models are displayed. The selection can be corrected by repeating the
-#'   two subsequent left-clicks. A click with the right mouse button accepts
+#'   two subsequent left-clicks. A click with the right mouse button (or
+#'   pressing the 'finish' button in Rstudio) accepts
 #'   the current result and the process continues with the next subset of the
 #'   data (i.e. the next plot). The results is returned after all subsets
 #'   were processed.
