@@ -106,6 +106,10 @@ lift <- function(df, time="time", value="value", keys=c("ID"), trans=log10) {
             graphics::lines(xy[sel,"time"],
               coeffs["robust",1] + coeffs["robust",2] * xy[sel,"time"],
               col="red", lty=2)
+            legend("topleft", bty="n", lty=1:2, col="red", legend=c("default", "robust"))
+            legend("bottomright", bty="n",
+              legend=c(paste("default:",signif(coeffs["default",2],3)),
+                       paste("robust:",signif(coeffs["default",2],3))))
           }
         }
       }
