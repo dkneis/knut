@@ -14,7 +14,7 @@
 #'   character, integer, or factor. They typically hold experiment IDs and/or
 #'   replicate IDs.
 #' @param trans A function that is applied to the data in the \code{value}
-#'   column of \code{df}. The default, \code{\link[base]{log10}}, is useful
+#'   column of \code{df}. The default, \code{\link[base]{log}}, is useful
 #'   for microbial growth data, for example.
 #'   
 #' @return A data frame with one row for each unique combination of the key
@@ -34,13 +34,10 @@
 #'   pressing the 'finish' button in Rstudio) accepts
 #'   the current result and the process continues with the next subset of the
 #'   data (i.e. the next plot). The results is returned after all subsets
-#'   were processed.
-#'   
-#'   \emph{Warning}: Since the function does not return intermediate output
+#'   were processed. Since the function does not return intermediate output
 #'   you better call it for smaller data sets (e.g. < 100 plots) only. This
-#'   avoids loosing to much manual work in case of crash, blackout, ...
+#'   avoids the loss of too much manual work in case of a crash, blackout, ...
 #'   
-#'
 #' @author David Kneis \email{david.kneis@@tu-dresden.de}
 #'
 #' @export
