@@ -18,11 +18,13 @@
 #'   for microbial growth data, for example.
 #'   
 #' @return A data frame with one row for each unique combination of the key
-#'   columns of \code{df}. The number of columns is \code{length(keys)} plus 2.
-#'   The two additional columns are named 'slope.default' and 'slope.robust'
-#'   where the former holds the slope of a linear model fitted with
-#'   \code{\link[stats]{lm}} and the latter holds the slope obtained with
-#'   \code{\link[robust]{lmRob}}.
+#'   columns of \code{df}. The number of columns is \code{length(keys)} plus 3.
+#'   The contents of the additional columns is as follows:
+#'   \itemize{
+#'     \item{slope.default}: Slope of linear model fitted with \code{\link[stats]{lm}}
+#'     \item{slope.robust}: Slope of linear model fitted with \code{\link[robust]{lmRob}}
+#'     \item{used.points}: Number of points selected for fitting
+#'   }
 #'
 #' @note A plot is created for each subset of the data and the user is asked to
 #'   select a (time) range on the x-axis by two sebsequent clicks with the left
@@ -33,6 +35,11 @@
 #'   the current result and the process continues with the next subset of the
 #'   data (i.e. the next plot). The results is returned after all subsets
 #'   were processed.
+#'   
+#'   \emph{Warning}: Since the function does not return intermediate output
+#'   you better call it for smaller data sets (e.g. < 100 plots) only. This
+#'   avoids loosing to much manual work in case of crash, blackout, ...
+#'   
 #'
 #' @author David Kneis \email{david.kneis@@tu-dresden.de}
 #'
@@ -52,7 +59,7 @@
 #' print(lift(d))
 #' }
 
-lift <- function(df, time="time", value="value", keys=c("ID"), trans=log10) {
+lift <- function(df, time="time", value="value", keys=c("ID"), trans=log) {
   if (!time %in% names(df))
     stop("time column not present in data")
   if (!value %in% names(df))
@@ -61,8 +68,8 @@ lift <- function(df, time="time", value="value", keys=c("ID"), trans=log10) {
     stop("key column(s) not present in data")
   df[,value] <- trans(df[,value])
   out <- unique(df[,keys,drop=FALSE])
-  slopes <- matrix(NA, ncol=2, nrow=nrow(out),
-    dimnames=list(NULL, c("slope.default","slope.robust")))
+  slopes <- matrix(NA, ncol=3, nrow=nrow(out),
+    dimnames=list(NULL, c("slope.default","slope.robust","used.points")))
   coeffs_empty <- matrix(NA, ncol=2, nrow=2,
     dimnames=list(c("default","robust"),c("intercept","slope")))
   for (i in 1:nrow(out)) {
@@ -73,6 +80,7 @@ lift <- function(df, time="time", value="value", keys=c("ID"), trans=log10) {
     xy <- df[this, c(time, value), drop=FALSE]
     graphics::plot(xy, main=main)
     coeffs <- coeffs_empty  # if no selection is made
+    count <- 0
     clicks <- 0
     while (TRUE) {
       loc <- graphics::locator(n=1)
@@ -81,6 +89,7 @@ lift <- function(df, time="time", value="value", keys=c("ID"), trans=log10) {
         break
       # re-initialize
       coeffs <- coeffs_empty  # if previous selection is revised
+      count <- 0
       # if left button
       clicks <- clicks + 1
       if ((clicks %% 2) != 0) {  # first click
@@ -91,8 +100,9 @@ lift <- function(df, time="time", value="value", keys=c("ID"), trans=log10) {
         loc2 <- loc
         graphics::plot(xy, main=main)
         graphics::abline(v=c(loc1$x, loc2$x))
-        sel <- (xy[,"time"] >= min(loc1$x, loc2$x)) &
-               (xy[,"time"] <= max(loc1$x,loc2$x))
+        sel <- which((xy[,"time"] >= min(loc1$x, loc2$x)) &
+                     (xy[,"time"] <= max(loc1$x,loc2$x)))
+        count <- length(sel)
         if (length(sel) > 0) {
           graphics::points(xy[sel,], pch=20, col="steelblue2")
           if (length(sel) > 1) {
@@ -106,8 +116,8 @@ lift <- function(df, time="time", value="value", keys=c("ID"), trans=log10) {
             graphics::lines(xy[sel,"time"],
               coeffs["robust",1] + coeffs["robust",2] * xy[sel,"time"],
               col="red", lty=2)
-            legend("topleft", bty="n", lty=1:2, col="red", legend=c("default", "robust"))
-            legend("bottomright", bty="n",
+            graphics::legend("topleft", bty="n", lty=1:2, col="red", legend=c("default", "robust"))
+            graphics::legend("bottomright", bty="n",
               legend=c(paste("default:",signif(coeffs["default",2],3)),
                        paste("robust:",signif(coeffs["robust",2],3))))
           }
@@ -116,6 +126,7 @@ lift <- function(df, time="time", value="value", keys=c("ID"), trans=log10) {
     }
     slopes[i,"slope.default"] <- coeffs["default",2]
     slopes[i,"slope.robust"] <- coeffs["robust",2]
+    slopes[i,"used.points"] <- count 
   }
   grDevices::graphics.off()
   cbind(out, slopes)

@@ -4,7 +4,7 @@
 \alias{lift}
 \title{Linear fitting with interactive data selection}
 \usage{
-lift(df, time = "time", value = "value", keys = c("ID"), trans = log10)
+lift(df, time = "time", value = "value", keys = c("ID"), trans = log)
 }
 \arguments{
 \item{df}{A data frame with columns specified in the other arguments.}
@@ -27,11 +27,13 @@ for microbial growth data, for example.}
 }
 \value{
 A data frame with one row for each unique combination of the key
-  columns of \code{df}. The number of columns is \code{length(keys)} plus 2.
-  The two additional columns are named 'slope.default' and 'slope.robust'
-  where the former holds the slope of a linear model fitted with
-  \code{\link[stats]{lm}} and the latter holds the slope obtained with
-  \code{\link[robust]{lmRob}}.
+  columns of \code{df}. The number of columns is \code{length(keys)} plus 3.
+  The contents of the additional columns is as follows:
+  \itemize{
+    \item{slope.default}: Slope of linear model fitted with \code{\link[stats]{lm}}
+    \item{slope.robust}: Slope of linear model fitted with \code{\link[robust]{lmRob}}
+    \item{used.points}: Number of points selected for fitting
+  }
 }
 \description{
 The function fits linear models to a subset of data that is interactively
@@ -42,7 +44,8 @@ A plot is created for each subset of the data and the user is asked to
   select a (time) range on the x-axis by two sebsequent clicks with the left
   mouse button. The selected data points are highlighted and the fitted
   models are displayed. The selection can be corrected by repeating the
-  two subsequent left-clicks. A click with the right mouse button accepts
+  two subsequent left-clicks. A click with the right mouse button (or
+  pressing the 'finish' button in Rstudio) accepts
   the current result and the process continues with the next subset of the
   data (i.e. the next plot). The results is returned after all subsets
   were processed.
