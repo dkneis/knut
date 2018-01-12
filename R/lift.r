@@ -47,11 +47,16 @@
 #' d <- read.table(header=TRUE, sep="", text='
 #'   ID  time  value
 #'   1   1     1
-#'   1   2     2
-#'   1   3     3
-#'   2   1     1
-#'   2   2     3
-#'   2   3     2
+#'   1   2     10
+#'   1   3     150
+#'   1   4     900
+#'   2   1     NA
+#'   2   2     NA
+#'   2   3     NA
+#'   3   1     2
+#'   3   2     33
+#'   3   3     180
+#'   3   4     3500
 #' ')
 #' print(lift(d))
 #' }
@@ -75,48 +80,54 @@ lift <- function(df, time="time", value="value", keys=c("ID"), trans=log) {
     for (k in keys)
       this[df[,k] != out[i,k]] <- FALSE
     xy <- df[this, c(time, value), drop=FALSE]
-    graphics::plot(xy, main=main)
     coeffs <- coeffs_empty  # if no selection is made
     count <- 0
-    clicks <- 0
-    while (TRUE) {
-      loc <- graphics::locator(n=1)
-      # exit if right button was pressed
-      if (is.null(loc))
-        break
-      # re-initialize
-      coeffs <- coeffs_empty  # if previous selection is revised
-      count <- 0
-      # if left button
-      clicks <- clicks + 1
-      if ((clicks %% 2) != 0) {  # first click
-        loc1 <- loc
-        graphics::plot(xy, main=main)
-        graphics::abline(v=loc1$x)
-      } else {                   # second click
-        loc2 <- loc
-        graphics::plot(xy, main=main)
-        graphics::abline(v=c(loc1$x, loc2$x))
-        sel <- which((xy[,"time"] >= min(loc1$x, loc2$x)) &
-                     (xy[,"time"] <= max(loc1$x,loc2$x)))
-        count <- length(sel)
-        if (length(sel) > 0) {
-          graphics::points(xy[sel,], pch=20, col="steelblue2")
-          if (length(sel) > 1) {
-            coeffs["default",] <- stats::coef(
-              stats::lm(xy[sel,value] ~ xy[sel,time]))
-            graphics::lines(xy[sel,"time"],
-              coeffs["default",1] + coeffs["default",2] * xy[sel,"time"],
-              col="red", lty=1)
-            coeffs["robust",] <- stats::coef(
-              robust::lmRob(xy[sel,value] ~ xy[sel,time]))
-            graphics::lines(xy[sel,"time"],
-              coeffs["robust",1] + coeffs["robust",2] * xy[sel,"time"],
-              col="red", lty=2)
-            graphics::legend("topleft", bty="n", lty=1:2, col="red", legend=c("default", "robust"))
-            graphics::legend("bottomright", bty="n",
-              legend=c(paste("default:",signif(coeffs["default",2],3)),
-                       paste("robust:",signif(coeffs["robust",2],3))))
+    if (any(is.finite(xy[,value]))) {  # don't even show plot in that case
+      graphics::plot(xy, main=main)
+      clicks <- 0
+      while (TRUE) {
+        loc <- graphics::locator(n=1)
+        # exit if right button was pressed
+        if (is.null(loc))
+          break
+        # re-initialize
+        coeffs <- coeffs_empty  # if previous selection is revised
+        count <- 0
+        # if left button
+        clicks <- clicks + 1
+        if ((clicks %% 2) != 0) {  # first click
+          loc1 <- loc
+          graphics::plot(xy, main=main)
+          graphics::abline(v=loc1$x)
+        } else {                   # second click
+          loc2 <- loc
+          graphics::plot(xy, main=main)
+          graphics::abline(v=c(loc1$x, loc2$x))
+          sel <- which((xy[,"time"] >= min(loc1$x, loc2$x)) &
+                       (xy[,"time"] <= max(loc1$x,loc2$x)))
+          count <- length(sel)
+          if (length(sel) > 0) {
+            graphics::points(xy[sel,], pch=20, col="steelblue2")
+            if (length(sel) > 1) {
+              tryCatch({
+                coeffs["default",] <- stats::coef(
+                  stats::lm(xy[sel,value] ~ xy[sel,time]))
+                graphics::lines(xy[sel,"time"],
+                  coeffs["default",1] + coeffs["default",2] * xy[sel,"time"],
+                  col="red", lty=1)
+              }, error = function(x) {}, warning = function(x) {})
+              tryCatch({
+                coeffs["robust",] <- stats::coef(
+                  robust::lmRob(xy[sel,value] ~ xy[sel,time]))
+                graphics::lines(xy[sel,"time"],
+                  coeffs["robust",1] + coeffs["robust",2] * xy[sel,"time"],
+                  col="red", lty=2)
+              }, error = function(x) {}, warning = function(x) {})
+              graphics::legend("topleft", bty="n", lty=1:2, col="red", legend=c("default", "robust"))
+              graphics::legend("bottomright", bty="n",
+                legend=c(paste("default:",signif(coeffs["default",2],3)),
+                         paste("robust:",signif(coeffs["robust",2],3))))
+            }
           }
         }
       }

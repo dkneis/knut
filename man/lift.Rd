@@ -22,7 +22,7 @@ character, integer, or factor. They typically hold experiment IDs and/or
 replicate IDs.}
 
 \item{trans}{A function that is applied to the data in the \code{value}
-column of \code{df}. The default, \code{\link[base]{log10}}, is useful
+column of \code{df}. The default, \code{\link[base]{log}}, is useful
 for microbial growth data, for example.}
 }
 \value{
@@ -48,18 +48,25 @@ A plot is created for each subset of the data and the user is asked to
   pressing the 'finish' button in Rstudio) accepts
   the current result and the process continues with the next subset of the
   data (i.e. the next plot). The results is returned after all subsets
-  were processed.
+  were processed. Since the function does not return intermediate output
+  you better call it for smaller data sets (e.g. < 100 plots) only. This
+  avoids the loss of too much manual work in case of a crash, blackout, ...
 }
 \examples{
 \dontrun{
 d <- read.table(header=TRUE, sep="", text='
   ID  time  value
   1   1     1
-  1   2     2
-  1   3     3
-  2   1     1
-  2   2     3
-  2   3     2
+  1   2     10
+  1   3     150
+  1   4     900
+  2   1     NA
+  2   2     NA
+  2   3     NA
+  3   1     2
+  3   2     33
+  3   3     180
+  3   4     3500
 ')
 print(lift(d))
 }
