@@ -2,6 +2,7 @@
 
 export(arrangeHTML)
 export(compareMedians)
+export(fisherPower)
 export(lift)
 export(plotColorMatrix)
 export(rodeoCompare)
