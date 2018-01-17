@@ -103,8 +103,8 @@ lift <- function(df, time="time", value="value", keys=c("ID"), trans=log) {
           loc2 <- loc
           graphics::plot(xy, main=main)
           graphics::abline(v=c(loc1$x, loc2$x))
-          sel <- which((xy[,"time"] >= min(loc1$x, loc2$x)) &
-                       (xy[,"time"] <= max(loc1$x,loc2$x)))
+          sel <- which((xy[,time] >= min(loc1$x, loc2$x)) &
+                       (xy[,time] <= max(loc1$x,loc2$x)))
           count <- length(sel)
           if (length(sel) > 0) {
             graphics::points(xy[sel,], pch=20, col="steelblue2")
@@ -112,15 +112,15 @@ lift <- function(df, time="time", value="value", keys=c("ID"), trans=log) {
               tryCatch({
                 coeffs["default",] <- stats::coef(
                   stats::lm(xy[sel,value] ~ xy[sel,time]))
-                graphics::lines(xy[sel,"time"],
-                  coeffs["default",1] + coeffs["default",2] * xy[sel,"time"],
+                graphics::lines(xy[sel,time],
+                  coeffs["default",1] + coeffs["default",2] * xy[sel,time],
                   col="red", lty=1)
               }, error = function(x) {}, warning = function(x) {})
               tryCatch({
                 coeffs["robust",] <- stats::coef(
                   robust::lmRob(xy[sel,value] ~ xy[sel,time]))
-                graphics::lines(xy[sel,"time"],
-                  coeffs["robust",1] + coeffs["robust",2] * xy[sel,"time"],
+                graphics::lines(xy[sel,time],
+                  coeffs["robust",1] + coeffs["robust",2] * xy[sel,time],
                   col="red", lty=2)
               }, error = function(x) {}, warning = function(x) {})
               graphics::legend("topleft", bty="n", lty=1:2, col="red", legend=c("default", "robust"))
