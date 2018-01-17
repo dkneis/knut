@@ -27,12 +27,14 @@ for microbial growth data, for example.}
 }
 \value{
 A data frame with one row for each unique combination of the key
-  columns of \code{df}. The number of columns is \code{length(keys)} plus 3.
+  columns of \code{df}. The number of columns is \code{length(keys)} plus 5.
   The contents of the additional columns is as follows:
   \itemize{
     \item{slope.default}: Slope of linear model fitted with \code{\link[stats]{lm}}
     \item{slope.robust}: Slope of linear model fitted with \code{\link[robust]{lmRob}}
     \item{used.points}: Number of points selected for fitting
+    \item{time.first}: Time coordinate of first (earliest) point selected
+    \item{time.last}: Time coordinate of last (latest) point selected
   }
 }
 \description{

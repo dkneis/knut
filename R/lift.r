@@ -18,12 +18,14 @@
 #'   for microbial growth data, for example.
 #'   
 #' @return A data frame with one row for each unique combination of the key
-#'   columns of \code{df}. The number of columns is \code{length(keys)} plus 3.
+#'   columns of \code{df}. The number of columns is \code{length(keys)} plus 5.
 #'   The contents of the additional columns is as follows:
 #'   \itemize{
 #'     \item{slope.default}: Slope of linear model fitted with \code{\link[stats]{lm}}
 #'     \item{slope.robust}: Slope of linear model fitted with \code{\link[robust]{lmRob}}
 #'     \item{used.points}: Number of points selected for fitting
+#'     \item{time.first}: Time coordinate of first (earliest) point selected
+#'     \item{time.last}: Time coordinate of last (latest) point selected
 #'   }
 #'
 #' @note A plot is created for each subset of the data and the user is asked to
@@ -70,18 +72,23 @@ lift <- function(df, time="time", value="value", keys=c("ID"), trans=log) {
     stop("key column(s) not present in data")
   df[,value] <- trans(df[,value])
   out <- unique(df[,keys,drop=FALSE])
-  slopes <- matrix(NA, ncol=3, nrow=nrow(out),
-    dimnames=list(NULL, c("slope.default","slope.robust","used.points")))
+  slopes <- matrix(NA, ncol=5, nrow=nrow(out),
+    dimnames=list(NULL, c("slope.default","slope.robust",
+      "used.points", "time.first", "time.last")))
   coeffs_empty <- matrix(NA, ncol=2, nrow=2,
     dimnames=list(c("default","robust"),c("intercept","slope")))
   for (i in 1:nrow(out)) {
     main <- paste0("Data set ",i," of ",nrow(out))
+    # filter data
     this <- rep(TRUE, nrow(df))
     for (k in keys)
       this[df[,k] != out[i,k]] <- FALSE
     xy <- df[this, c(time, value), drop=FALSE]
-    coeffs <- coeffs_empty  # if no selection is made
+    # initialize - no selection made yet
+    coeffs <- coeffs_empty
     count <- 0
+    times <- c(first=NA, last=NA)
+    # start interaction
     if (any(is.finite(xy[,value]))) {  # don't even show plot in that case
       graphics::plot(xy, main=main)
       clicks <- 0
@@ -90,9 +97,10 @@ lift <- function(df, time="time", value="value", keys=c("ID"), trans=log) {
         # exit if right button was pressed
         if (is.null(loc))
           break
-        # re-initialize
-        coeffs <- coeffs_empty  # if previous selection is revised
+        # re-initialize - previous selection is revised
+        coeffs <- coeffs_empty
         count <- 0
+        times <- c(first=NA, last=NA)
         # if left button
         clicks <- clicks + 1
         if ((clicks %% 2) != 0) {  # first click
@@ -107,6 +115,7 @@ lift <- function(df, time="time", value="value", keys=c("ID"), trans=log) {
                        (xy[,time] <= max(loc1$x,loc2$x)))
           count <- length(sel)
           if (length(sel) > 0) {
+            times <- c(first=xy[sel[1],time], last=xy[sel[length(sel)],time])
             graphics::points(xy[sel,], pch=20, col="steelblue2")
             if (length(sel) > 1) {
               tryCatch({
@@ -135,6 +144,8 @@ lift <- function(df, time="time", value="value", keys=c("ID"), trans=log) {
     slopes[i,"slope.default"] <- coeffs["default",2]
     slopes[i,"slope.robust"] <- coeffs["robust",2]
     slopes[i,"used.points"] <- count 
+    slopes[i,"time.first"] <- times["first"]
+    slopes[i,"time.last"] <- times["last"]
   }
   grDevices::graphics.off()
   cbind(out, slopes)
