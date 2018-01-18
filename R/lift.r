@@ -16,6 +16,10 @@
 #' @param trans A function that is applied to the data in the \code{value}
 #'   column of \code{df}. The default, \code{\link[base]{log}}, is useful
 #'   for microbial growth data, for example.
+#' @param ylim A numeric vector of length 2 specifying the lower and upper limit
+#'   for the value axis, respectively. Note that the values must be supplied in
+#'   the transformed scale if \code{trans} is used. If one of the values is set
+#'   to \code{NA}, the corresponding axis limit is computed from the data.
 #'   
 #' @return A data frame with one row for each unique combination of the key
 #'   columns of \code{df}. The number of columns is \code{length(keys)} plus 5.
@@ -63,13 +67,15 @@
 #' print(lift(d))
 #' }
 
-lift <- function(df, time="time", value="value", keys=c("ID"), trans=log) {
+lift <- function(df, time="time", value="value", keys=c("ID"), trans=log, ylim=c(NA,NA)) {
   if (!time %in% names(df))
     stop("time column not present in data")
   if (!value %in% names(df))
     stop("value column not present in data")
   if (!all(keys %in% names(df)))
     stop("key column(s) not present in data")
+  if (length(ylim) != 2)
+    stop("improper specification of y-axis limits")
   df[,value] <- trans(df[,value])
   out <- unique(df[,keys,drop=FALSE])
   slopes <- matrix(NA, ncol=5, nrow=nrow(out),
@@ -84,13 +90,17 @@ lift <- function(df, time="time", value="value", keys=c("ID"), trans=log) {
     for (k in keys)
       this[df[,k] != out[i,k]] <- FALSE
     xy <- df[this, c(time, value), drop=FALSE]
+    if (is.na(ylim[1]))
+      ylim[1] <- min(xy[,value], na.rm=TRUE)
+    if (is.na(ylim[2]))
+      ylim[2] <- max(xy[,value], na.rm=TRUE)
     # initialize - no selection made yet
     coeffs <- coeffs_empty
     count <- 0
     times <- c(first=NA, last=NA)
     # start interaction
     if (any(is.finite(xy[,value]))) {  # don't even show plot in that case
-      graphics::plot(xy, main=main)
+      graphics::plot(xy, main=main, ylim=ylim)
       clicks <- 0
       while (TRUE) {
         loc <- graphics::locator(n=1)
@@ -105,11 +115,11 @@ lift <- function(df, time="time", value="value", keys=c("ID"), trans=log) {
         clicks <- clicks + 1
         if ((clicks %% 2) != 0) {  # first click
           loc1 <- loc
-          graphics::plot(xy, main=main)
+          graphics::plot(xy, main=main, ylim=ylim)
           graphics::abline(v=loc1$x)
         } else {                   # second click
           loc2 <- loc
-          graphics::plot(xy, main=main)
+          graphics::plot(xy, main=main, ylim=ylim)
           graphics::abline(v=c(loc1$x, loc2$x))
           sel <- which((xy[,time] >= min(loc1$x, loc2$x)) &
                        (xy[,time] <= max(loc1$x,loc2$x)))

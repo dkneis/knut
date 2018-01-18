@@ -4,7 +4,8 @@
 \alias{lift}
 \title{Linear fitting with interactive data selection}
 \usage{
-lift(df, time = "time", value = "value", keys = c("ID"), trans = log)
+lift(df, time = "time", value = "value", keys = c("ID"), trans = log,
+  ylim = NULL)
 }
 \arguments{
 \item{df}{A data frame with columns specified in the other arguments.}
@@ -24,6 +25,10 @@ replicate IDs.}
 \item{trans}{A function that is applied to the data in the \code{value}
 column of \code{df}. The default, \code{\link[base]{log}}, is useful
 for microbial growth data, for example.}
+
+\item{ylim}{Either \code{NULL} or a numeric vector of length 2 specifying the
+lower and upper limit for the value axis, respectively. Note that the
+values must be supplied in the transformed scale if \code{trans} is used.}
 }
 \value{
 A data frame with one row for each unique combination of the key
