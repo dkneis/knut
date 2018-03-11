@@ -5,7 +5,7 @@
 \title{Linear fitting with interactive data selection}
 \usage{
 lift(df, time = "time", value = "value", keys = c("ID"), trans = log,
-  ylim = NULL)
+  ylim = c(NA, NA))
 }
 \arguments{
 \item{df}{A data frame with columns specified in the other arguments.}
@@ -26,9 +26,10 @@ replicate IDs.}
 column of \code{df}. The default, \code{\link[base]{log}}, is useful
 for microbial growth data, for example.}
 
-\item{ylim}{Either \code{NULL} or a numeric vector of length 2 specifying the
-lower and upper limit for the value axis, respectively. Note that the
-values must be supplied in the transformed scale if \code{trans} is used.}
+\item{ylim}{A numeric vector of length 2 specifying the lower and upper limit
+for the value axis, respectively. Note that the values must be supplied in
+the transformed scale if \code{trans} is used. If one of the values is set
+to \code{NA}, the corresponding axis limit is computed from the data.}
 }
 \value{
 A data frame with one row for each unique combination of the key
