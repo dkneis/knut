@@ -2,6 +2,8 @@
 
 export(arrangeHTML)
 export(compareMedians)
+export(extinctSequences)
+export(extinctSimplify)
 export(fisherPower)
 export(lift)
 export(plotColorMatrix)
