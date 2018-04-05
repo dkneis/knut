@@ -30,7 +30,6 @@
 #' }
 
 fisherPower <- function(pA, pB, nA, nB, alpha=0.05, nRepl=1e3) {
-  nRepl <- 1e3
   is.significant <- function(dummy) {
     a <- ifelse(stats::runif(nA) <= pA, 1, 0)
     b <- ifelse(stats::runif(nB) <= pB, 1, 0)
