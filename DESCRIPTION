@@ -10,5 +10,6 @@ License: GPL (>= 2)
 Imports:
     rodeo,
     FME,
-    robust
+    robust,
+    reshape2
 RoxygenNote: 6.0.1
