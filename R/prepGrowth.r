@@ -5,11 +5,11 @@
 #' blank value.
 #'
 #' @param file_plate Delimited text file with info on plate layout. Must have
-#'   columns 'Well_ID', 'Strain', 'Replicate'.
+#'   columns 'Well_ID', 'Strain', 'Replicate'. It is necessary that, for
+#'   one or more records, the value in column 'Strain' is set to 'blank'.
 #' @param file_growth Delimited text file with observed data. Must have column
 #'   'Time'. All additional columns must be named after wells as specified in
-#'   the field 'Well_ID' of the other input file or the colum must carry the
-#'   name 'blank'.
+#'   the field 'Well_ID' of the other input file.
 #'   ".
 #' @param file_out Name for the output file.
 #' @param sep_in The field delimiter for input files. Default is TAB and the
@@ -44,6 +44,8 @@ prepGrowth <- function(file_plate, file_growth, file_out,
   names(plate)[names(plate) == "Well_ID"] <- "id_well"
   names(plate)[names(plate) == "Strain"] <- "id_strain"
   names(plate)[names(plate) == "Replicate"] <- "id_replicate"
+  if (!"blank" %in% plate[,"id_strain"])
+    stop("no record(s) with strain ID 'blank' in file '",file_plate,"'")
   
   if (!file.exists(file_growth))
     stop(paste0("input file '",file_growth,"' not found"))

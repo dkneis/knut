@@ -9,12 +9,12 @@ prepGrowth(file_plate, file_growth, file_out, sep_in = "\\t", dec_in = ".",
 }
 \arguments{
 \item{file_plate}{Delimited text file with info on plate layout. Must have
-columns 'Well_ID', 'Strain', 'Replicate'.}
+columns 'Well_ID', 'Strain', 'Replicate'. It is necessary that, for
+one or more records, the value in column 'Strain' is set to 'blank'.}
 
 \item{file_growth}{Delimited text file with observed data. Must have column
 'Time'. All additional columns must be named after wells as specified in
-the field 'Well_ID' of the other input file or the colum must carry the
-name 'blank'.
+the field 'Well_ID' of the other input file.
 ".}
 
 \item{file_out}{Name for the output file.}
