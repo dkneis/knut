@@ -46,6 +46,10 @@ prepGrowth <- function(file_plate, file_growth, file_out,
   names(plate)[names(plate) == "Replicate"] <- "id_replicate"
   if (!"blank" %in% plate[,"id_strain"])
     stop("no record(s) with strain ID 'blank' in file '",file_plate,"'")
+  i <- which(duplicated(plate))
+  if (length(i) > 0)
+    stop("found duplicates in file '",file_plate,
+      "'; first duplicated record occurred at line no. ",i[1]+1)
   
   if (!file.exists(file_growth))
     stop(paste0("input file '",file_growth,"' not found"))
@@ -66,6 +70,8 @@ prepGrowth <- function(file_plate, file_growth, file_out,
     round(sum(as.numeric(x) * c(1, 1/60, 1/3600)), 3)
   }
   growth$time <- sapply(growth$time, as.hours)
+  if (is.unsorted(growth$time, strictly=TRUE))
+    stop("times not strictly increasing in file '",file_growth,"'")
   
   growth <- reshape2::melt(data=growth, id.vars="time", variable.name="id_well")
   growth$id_well <- gsub(x=growth$id_well, pattern="Well ", replacement="", fixed=TRUE)
