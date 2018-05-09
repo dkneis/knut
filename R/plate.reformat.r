@@ -4,10 +4,10 @@
 #' Specifically, the function merges info from two separate files and also
 #' subtracts the blank value.
 #'
-#' @param file_plate Delimited text file with info on plate layout. Must have
+#' @param file_layout Delimited text file with info on plate layout. Must have
 #'   columns 'id_well', 'id_sample', 'id_replicate'. It is necessary that, for
 #'   one or more records, the value in column 'id_sample' is set to 'blank'.
-#' @param file_growth Delimited text file with observed data. Must have column
+#' @param file_dynamics Delimited text file with observed data. Must have column
 #'   'time'. All additional columns must be named after wells as specified in
 #'   the field 'id_well' of the other input file.
 #'   ".
@@ -26,43 +26,43 @@
 #'
 #' @examples
 #' \dontrun{
-#'   plate.reformat(file_plate="in/strains.txt", file_growth="in/growth.txt",
+#'   plate.reformat(file_layout="in/strains.txt", file_dynamics="in/growth.txt",
 #'     file_out="out.txt")
 #' }
 
-plate.reformat <- function(file_plate, file_growth, file_out,
+plate.reformat <- function(file_layout, file_dynamics, file_out,
   sep_in="\t", dec_in=".", overwrite=FALSE) {
 
-  if (!file.exists(file_plate))
-    stop(paste0("input file '",file_plate,"' not found"))
-  plate <- utils::read.table(file=file_plate, header=TRUE, sep=sep_in,
+  if (!file.exists(file_layout))
+    stop(paste0("input file '",file_layout,"' not found"))
+  plate <- utils::read.table(file=file_layout, header=TRUE, sep=sep_in,
     stringsAsFactors=FALSE)
   req <- c("id_well","id_sample","id_replicate")
   if (!all(req %in% names(plate)))
-    stop(paste0("input file '",file_plate,"' must have columns: '",
+    stop(paste0("input file '",file_layout,"' must have columns: '",
       paste(req, collapse="', '"),"'"))
   if (!"blank" %in% plate[,"id_sample"])
-    stop("no record(s) with sample ID 'blank' in file '",file_plate,"'")
+    stop("no record(s) with sample ID 'blank' in file '",file_layout,"'")
   i <- which(duplicated(plate[,"id_well"]))
   if (length(i) > 0)
-    stop("found duplicates well ID(s) in file '",file_plate,
+    stop("found duplicates well ID(s) in file '",file_layout,
       "'; first duplicate occurred at line no. ",i[1]+1)
   i <- which(duplicated(plate[plate$id_sample != "blank",c("id_sample", "id_replicate")]))
   if (length(i) > 0)
-    stop("found duplicates in file '",file_plate,
+    stop("found duplicates in file '",file_layout,
       "' based on the combined primary key columns 'id_sample' and 'id_replicate'",
       "; first duplicate occurred at line no. ",i[1]+1)
   
-  if (!file.exists(file_growth))
-    stop(paste0("input file '",file_growth,"' not found"))
-  growth <- utils::read.table(file=file_growth, header=TRUE, sep=sep_in, dec=dec_in,
+  if (!file.exists(file_dynamics))
+    stop(paste0("input file '",file_dynamics,"' not found"))
+  growth <- utils::read.table(file=file_dynamics, header=TRUE, sep=sep_in, dec=dec_in,
     check.names=FALSE, stringsAsFactors=FALSE)
   req <- c("time")
   if (!all(req %in% names(growth)))
-    stop(paste0("input file '",file_growth,"' must have columns: '",
+    stop(paste0("input file '",file_dynamics,"' must have columns: '",
       paste(req, collapse="', '"),"'"))
   if (length(unique(names(growth))) != length(names(growth)))
-    stop(paste0("column names in input file '",file_growth,"' not unique"))
+    stop(paste0("column names in input file '",file_dynamics,"' not unique"))
   
   as.hours <- function(x) {
     x <- unlist(strsplit(x, split=":", fixed=TRUE))
@@ -72,19 +72,19 @@ plate.reformat <- function(file_plate, file_growth, file_out,
   }
   growth$time <- sapply(growth$time, as.hours)
   if (is.unsorted(growth$time, strictly=TRUE))
-    stop("times not strictly increasing in file '",file_growth,"'")
+    stop("times not strictly increasing in file '",file_dynamics,"'")
   
   growth <- reshape2::melt(data=growth, id.vars="time", variable.name="id_well")
   bad <- unique(growth$id_well[!growth$id_well %in% plate$id_well])
   if (length(bad) > 0)
-    stop(paste0("well ID in growth data file '",file_growth,
+    stop(paste0("well ID in growth data file '",file_dynamics,
       "' not listed in plate layout file '",
-      file_plate,"'; Details: '", paste(bad, collapse="', '"),"'"))
+      file_layout,"'; Details: '", paste(bad, collapse="', '"),"'"))
   bad <- plate$id_well[!plate$id_well %in% growth$id_well]
   if (length(bad) > 0)
-    stop(paste0("well ID in plate layout file '",file_plate,
+    stop(paste0("well ID in plate layout file '",file_layout,
       "' not referenced in growth data file '",
-      file_growth,"'; Details: '", paste(bad, collapse="', '"),"'"))
+      file_dynamics,"'; Details: '", paste(bad, collapse="', '"),"'"))
   growth <- merge(x=plate, y=growth, by="id_well")
   growth$id_well <- NULL
   rm(plate)
