@@ -1,24 +1,24 @@
-#' Prepares UHEL growth rate data for further analysis
+#' Prepares plate reader data for further analysis
 #'
-#' Prepares growth rate data produced by Stefanie at UHEL for further analysis.
-#' The function merges info from two separate files and also subtracts the
-#' blank value.
+#' Plate reader data are reformatted to facilitate further analysis.
+#' Specifically, the function merges info from two separate files and also
+#' subtracts the blank value.
 #'
 #' @param file_plate Delimited text file with info on plate layout. Must have
-#'   columns 'Well_ID', 'Strain', 'Replicate'. It is necessary that, for
-#'   one or more records, the value in column 'Strain' is set to 'blank'.
+#'   columns 'id_well', 'id_sample', 'id_replicate'. It is necessary that, for
+#'   one or more records, the value in column 'id_sample' is set to 'blank'.
 #' @param file_growth Delimited text file with observed data. Must have column
-#'   'Time'. All additional columns must be named after wells as specified in
-#'   the field 'Well_ID' of the other input file.
+#'   'time'. All additional columns must be named after wells as specified in
+#'   the field 'id_well' of the other input file.
 #'   ".
 #' @param file_out Name for the output file.
 #' @param sep_in The field delimiter for input files. Default is TAB and the
-#'   later is always used for the output.
+#'   latter is always used for the output.
 #' @param dec_in The decimal character for input files. Default is period and
 #'   the latter is always used for the output. 
 #' @param overwrite Logical. Should existing output files be overwritten?
 #'   
-#' @return Nothing. All results are writte to the specified output file.
+#' @return \code{NULL}. All results are written to the specified output file.
 #'
 #' @author David Kneis \email{david.kneis@@tu-dresden.de}
 #'
@@ -26,40 +26,41 @@
 #'
 #' @examples
 #' \dontrun{
-#'   growthDB(file_plate="in/strains.txt", file_growth="in/growth.txt",
+#'   plate.reformat(file_plate="in/strains.txt", file_growth="in/growth.txt",
 #'     file_out="out.txt")
 #' }
 
-prepGrowth <- function(file_plate, file_growth, file_out,
+plate.reformat <- function(file_plate, file_growth, file_out,
   sep_in="\t", dec_in=".", overwrite=FALSE) {
 
   if (!file.exists(file_plate))
     stop(paste0("input file '",file_plate,"' not found"))
   plate <- utils::read.table(file=file_plate, header=TRUE, sep=sep_in,
     stringsAsFactors=FALSE)
-  req <- c("Well_ID","Strain","Replicate")
+  req <- c("id_well","id_sample","id_replicate")
   if (!all(req %in% names(plate)))
     stop(paste0("input file '",file_plate,"' must have columns: '",
       paste(req, collapse="', '"),"'"))
-  names(plate)[names(plate) == "Well_ID"] <- "id_well"
-  names(plate)[names(plate) == "Strain"] <- "id_strain"
-  names(plate)[names(plate) == "Replicate"] <- "id_replicate"
-  if (!"blank" %in% plate[,"id_strain"])
-    stop("no record(s) with strain ID 'blank' in file '",file_plate,"'")
-  i <- which(duplicated(plate))
+  if (!"blank" %in% plate[,"id_sample"])
+    stop("no record(s) with sample ID 'blank' in file '",file_plate,"'")
+  i <- which(duplicated(plate[,"id_well"]))
+  if (length(i) > 0)
+    stop("found duplicates well ID(s) in file '",file_plate,
+      "'; first duplicate occurred at line no. ",i[1]+1)
+  i <- which(duplicated(plate[plate$id_sample != "blank",c("id_sample", "id_replicate")]))
   if (length(i) > 0)
     stop("found duplicates in file '",file_plate,
-      "'; first duplicated record occurred at line no. ",i[1]+1)
+      "' based on the combined primary key columns 'id_sample' and 'id_replicate'",
+      "; first duplicate occurred at line no. ",i[1]+1)
   
   if (!file.exists(file_growth))
     stop(paste0("input file '",file_growth,"' not found"))
   growth <- utils::read.table(file=file_growth, header=TRUE, sep=sep_in, dec=dec_in,
     check.names=FALSE, stringsAsFactors=FALSE)
-  req <- c("Time")
+  req <- c("time")
   if (!all(req %in% names(growth)))
     stop(paste0("input file '",file_growth,"' must have columns: '",
       paste(req, collapse="', '"),"'"))
-  names(growth)[names(growth) == "Time"] <- "time"
   if (length(unique(names(growth))) != length(names(growth)))
     stop(paste0("column names in input file '",file_growth,"' not unique"))
   
@@ -74,24 +75,23 @@ prepGrowth <- function(file_plate, file_growth, file_out,
     stop("times not strictly increasing in file '",file_growth,"'")
   
   growth <- reshape2::melt(data=growth, id.vars="time", variable.name="id_well")
-  growth$id_well <- gsub(x=growth$id_well, pattern="Well ", replacement="", fixed=TRUE)
   bad <- unique(growth$id_well[!growth$id_well %in% plate$id_well])
   if (length(bad) > 0)
-    stop(paste0("well_id in growth data file '",file_growth,
+    stop(paste0("well ID in growth data file '",file_growth,
       "' not listed in plate layout file '",
       file_plate,"'; Details: '", paste(bad, collapse="', '"),"'"))
   bad <- plate$id_well[!plate$id_well %in% growth$id_well]
   if (length(bad) > 0)
-    stop(paste0("well_id in plate layout file '",file_plate,
+    stop(paste0("well ID in plate layout file '",file_plate,
       "' not referenced in growth data file '",
       file_growth,"'; Details: '", paste(bad, collapse="', '"),"'"))
   growth <- merge(x=plate, y=growth, by="id_well")
   growth$id_well <- NULL
   rm(plate)
   
-  blank <- min(growth$value[growth$id_strain == "blank"])
+  blank <- mean(growth$value[growth$id_sample == "blank"])
   growth$value <- growth$value - blank
-  growth <- growth[growth$id_strain != "blank",]
+  growth <- growth[growth$id_sample != "blank",]
   
   if (file.exists(file_out) && (!overwrite))
     stop(paste0("unwilling to overwrite existing output file '",file_out,"'"))
