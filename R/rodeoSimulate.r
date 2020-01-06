@@ -17,12 +17,14 @@
 rodeoSimulate <- function(inputs, model, times) {
   model$setPars(inputs[model$namesPars()])
   model$setVars(inputs[model$namesVars()])
+  if (!is.numeric(times) || (length(times) < 2))
+    stop("'times' must be a numeric vector of length greater than 1")
   tryCatch({
     sim <- model$dynamics(times)
   }, error= function(x) {
-    print(x)
-    stop("simulation failed for inputs: ",
-      paste(names(inputs), inputs, sep="=", collapse=", "))
+    stop(paste0("simulation failed for inputs ",
+      paste(names(inputs), inputs, sep="=", collapse=", "),
+      "; message: ",x))
   })
   sim
 }
