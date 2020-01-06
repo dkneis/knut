@@ -11,6 +11,7 @@
 #' @param keep Vector of character strings defining the rows and columns to be
 #'   always kept in the system. Typically, these represent primary producers.
 #'   The elements in \code{keep} should not be present in \code{drop} as well.
+#'   Can be an empty vector.
 #' 
 #' @return A square matrix with less rows and columns than the input matrix
 #'   \code{m}. The result matrix reflects both the forced extinctions (specified
@@ -45,12 +46,12 @@
 extinctSimplify <- function(m, drop, keep) {
   # Check inputs
   if (!is.matrix(m) || !is.numeric(m))
-    stop("'m'must be a numeric matrix")
+    stop("'m' must be a numeric matrix")
   if (!identical(rownames(m), colnames(m)))
     stop("row names and column names of 'm' must be identical")
   if (!all(drop %in% colnames(m)))
     stop("all elements of 'drop' must be present in 'm'")
-  if (!all(keep %in% colnames(m)))
+  if ((length(keep) > 0) && (!all(keep %in% colnames(m))))
     stop("all elements of 'keep' must be present in 'm'")
   if (any(keep %in% drop))
     stop("elements of 'keep' must not be present in 'drop'")
