@@ -4,41 +4,33 @@
 \alias{plate.reformat}
 \title{Prepares plate reader data for further analysis}
 \usage{
-plate.reformat(file_plate, file_growth, file_out, sep_in = "\\t",
-  dec_in = ".", overwrite = FALSE)
+plate.reformat(layout, dynamics)
 }
 \arguments{
-\item{file_plate}{Delimited text file with info on plate layout. Must have
+\item{layout}{Data frame with info on plate layout. Must have
 columns 'id_well', 'id_sample', 'id_replicate'. It is necessary that, for
 one or more records, the value in column 'id_sample' is set to 'blank'.}
 
-\item{file_growth}{Delimited text file with observed data. Must have column
+\item{dynamics}{Data frame with observed data. Must have column
 'time'. All additional columns must be named after wells as specified in
 the field 'id_well' of the other input file.
 ".}
-
-\item{file_out}{Name for the output file.}
-
-\item{sep_in}{The field delimiter for input files. Default is TAB and the
-latter is always used for the output.}
-
-\item{dec_in}{The decimal character for input files. Default is period and
-the latter is always used for the output.}
-
-\item{overwrite}{Logical. Should existing output files be overwritten?}
 }
 \value{
-\code{NULL}. All results are written to the specified output file.
+A data frame.
 }
 \description{
 Plate reader data are reformatted to facilitate further analysis.
 Specifically, the function merges info from two separate files and also
 subtracts the blank value.
 }
+\note{
+The subtracted blank value is the mean of the blank wells for the
+  respective time step. Possible negative results are set to zero.
+}
 \examples{
 \dontrun{
-  plate.reformat(file_plate="in/strains.txt", file_growth="in/growth.txt",
-    file_out="out.txt")
+  # Example to be prepared
 }
 }
 \author{
